@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faders</title>
+    <style>
+        body {
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f7f7f7;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            position: relative;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .fader-list {
+            display: flex;
+        }
+
+        .slider-container {
+            position: relative;
+            width: 70px;
+            height: 350px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 300px;
+            height: 15px;
+            background: linear-gradient(0deg, #00bcd4, #4caf50);
+            border-radius: 10px;
+            outline: none;
+            writing-mode: bt-tl;
+            transition: all 0.3s ease;
+            transform: rotate(90deg);
+            margin-top: 200px;
+            direction: rtl;
+        }
+
+        .slider:active {
+            background: linear-gradient(90deg, #4caf50, #00bcd4);
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #ff4081;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            background: #e91e63;
+        }
+
+        .value {
+            margin-top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .value span {
+            color: #4caf50;
+        }
+
+        .fader-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            width: 150px;
+        }
+
+        .fader-item div {
+            margin-bottom: 10px;
+            color: #777;
+            margin-top: 200px;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 50px;
+            right: 50px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: red;
+            transition: background-color 0.3s ease;
+        }
+
+        .status-indicator p {
+            position: absolute;
+            top: -60px;
+        }
+
+        .button {
+            width: 60px;
+            height: 30px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .active {
+            background-color: green;
+            color: white;
+        }
+
+        .inactive {
+            background-color: red;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>All Faders</h1>
+        <div class="fader-list" id="faderList">
+            <!-- Здесь будут выводиться фейдеры -->
+        </div>
+    </div>
+
+    <div id="statusIndicator" class="status-indicator">
+        <p>Server Status</p> <!-- Индикатор состояния подключения -->
+    </div>
+
+    <script>
+        let timeout = null;
+        let faders = {};
+
+        async function getFaders() {
+            try {
+                const response = await fetch("http://localhost/elements");
+                const data = await response.json();
+                const statusIndicator = document.getElementById("statusIndicator");
+
+                if (response.ok) {
+                    statusIndicator.style.backgroundColor = "green";
+                    const faderListContainer = document.getElementById("faderList");
+                    faderListContainer.innerHTML = '';
+
+                    // Фильтруем только фейдеры и сортируем
+                    const faderElements = data
+                        .filter(el => el.element_type === "fader")
+                        .sort((a, b) => a.id - b.id);
+
+                    faders = {};
+
+                    for (const fader of faderElements) {
+                        const faderId = fader.id;
+                        const value = fader.fader?.value || 0;
+
+                        faders[faderId] = { value: value };
+
+                        const faderItem = document.createElement("div");
+                        faderItem.classList.add("fader-item");
+
+                        // Если fader.buttons отсутствует или пустой, создаём две кнопки по умолчанию.
+                        const buttonsData = (fader.buttons && fader.buttons.length > 0)
+                            ? fader.buttons
+                            : [
+                                { id: faderId * 2 - 1, status: "OFF", element_id: faderId, label: "Start" },
+                                { id: faderId * 2, status: "OFF", element_id: faderId, label: "CUE" }
+                            ];
+
+                        // Формируем HTML для кнопок с использованием реальных id из buttonsData
+                        let buttonsHTML = "";
+                        buttonsData.forEach((btn, index) => {
+                            buttonsHTML += `
+                              <button id="button${index + 1}-${faderId}" class="button inactive" data-button-id="${btn.id}"
+                                  onclick="toggleButton(this, ${faderId})">
+                                  ${btn.label}
+                              </button>
+                            `;
+                        });
+
+                        faderItem.innerHTML = `
+                            <div>Фейдер ID: ${faderId}</div>
+                            <input type="range" min="-60" max="10" value="${value}" step="1" class="slider" id="fader-${faderId}">
+                            <div id="valueDisplay-${faderId}" class="value"><span>${value}</span></div>
+                            ${buttonsHTML}
+                        `;
+
+                        faderListContainer.appendChild(faderItem);
+
+                        const slider = document.getElementById(`fader-${faderId}`);
+                        const valueDisplay = document.getElementById(`valueDisplay-${faderId}`);
+
+                        slider.addEventListener("input", () => {
+                            faders[faderId].value = slider.value;
+                            valueDisplay.innerHTML = `<span>${slider.value}</span>`;
+                            clearTimeout(timeout);
+                            timeout = setTimeout(() => sendData(faderId, slider.value), 100);
+                        });
+
+                        updateButtonStates(faderId);
+                    }
+                } else {
+                    statusIndicator.style.backgroundColor = "red";
+                    console.error("Ошибка при получении данных:", data);
+                }
+            } catch (error) {
+                document.getElementById("statusIndicator").style.backgroundColor = "red";
+                console.error("Ошибка запроса:", error);
+            }
+        }
+
+        async function sendData(id, value) {
+            try {
+                const response = await fetch(`http://localhost/faders/${id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ value })
+                });
+
+                if (response.ok) {
+                    console.log(`Фейдер ${id} обновлён: ${value}`);
+                } else {
+                    console.error("Ошибка отправки фейдера");
+                }
+            } catch (error) {
+                console.error("Ошибка при отправке фейдера:", error);
+            }
+        }
+
+        async function updateButtonStates(faderId) {
+            try {
+                const response = await fetch("http://localhost/buttons");
+                const buttons = await response.json();
+
+                console.log("Button states received from server:", buttons);
+                // Сортируем кнопки: сначала по element_id, затем по id
+                buttons.sort((a, b) => {
+                    const elA = a.element_id || 0, elB = b.element_id || 0;
+                    return elA - elB || a.id - b.id;
+                });
+
+                // Отбираем кнопки, связанные с данным фейдером (по element_id)
+                const relatedButtons = buttons.filter(b => b.element_id === faderId);
+
+                // Обновляем состояние кнопок
+                relatedButtons.forEach((btn, index) => {
+                    const buttonElement = document.getElementById(`button${index + 1}-${faderId}`);
+                    if (buttonElement) {
+                        buttonElement.classList.toggle("active", btn.status === "ON");
+                        buttonElement.classList.toggle("inactive", btn.status === "OFF");
+                        console.log(`Button ${btn.id} (фейдер ${faderId}) status: ${btn.status}`);
+                    }
+                });
+            } catch (error) {
+                console.error("Ошибка загрузки кнопок:", error);
+            }
+        }
+
+        // Функция для переключения состояния кнопки. Теперь принимает элемент кнопки и использует его data-атрибут.
+        async function toggleButton(buttonElement, faderId) {
+            try {
+                const actualButtonId = parseInt(buttonElement.dataset.buttonId, 10);
+                const newState = buttonElement.classList.contains("active") ? "OFF" : "ON";
+
+                console.log(`Sending PATCH request for button ${actualButtonId} with status ${newState}`);
+
+                const response = await fetch(`http://localhost/buttons/${actualButtonId}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status: newState }) // Отправляем только статус
+                });
+
+                if (response.ok) {
+                    console.log(`Button ${actualButtonId} updated successfully`);
+                    buttonElement.classList.toggle("active", newState === "ON");
+                    buttonElement.classList.toggle("inactive", newState === "OFF");
+                    updateButtonStates(faderId);
+                } else {
+                    console.error("Ошибка обновления кнопки");
+                }
+            } catch (error) {
+                console.error("Ошибка при переключении кнопки:", error);
+            }
+        }
+
+        window.onload = getFaders;
+    </script>
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,24 @@
+current directory: /home/alex/rails/fader_api/vendor/bundle/ruby/3.2.0/gems/date-3.4.1/ext/date
+/home/alex/.rbenv/versions/3.2.1/bin/ruby -I /home/alex/.rbenv/versions/3.2.1/lib/ruby/site_ruby/3.2.0 extconf.rb
+checking for rb_category_warn()... yes
+checking for timezone in time.h with  -Werror... yes
+checking for altzone in time.h with  -Werror... no
+creating Makefile
+
+current directory: /home/alex/rails/fader_api/vendor/bundle/ruby/3.2.0/gems/date-3.4.1/ext/date
+make DESTDIR\= sitearchdir\=./.gem.20250326-1370840-kn38hf sitelibdir\=./.gem.20250326-1370840-kn38hf clean
+
+current directory: /home/alex/rails/fader_api/vendor/bundle/ruby/3.2.0/gems/date-3.4.1/ext/date
+make DESTDIR\= sitearchdir\=./.gem.20250326-1370840-kn38hf sitelibdir\=./.gem.20250326-1370840-kn38hf
+compiling date_core.c
+compiling date_parse.c
+compiling date_strftime.c
+compiling date_strptime.c
+linking shared-object date_core.so
+
+current directory: /home/alex/rails/fader_api/vendor/bundle/ruby/3.2.0/gems/date-3.4.1/ext/date
+make DESTDIR\= sitearchdir\=./.gem.20250326-1370840-kn38hf sitelibdir\=./.gem.20250326-1370840-kn38hf install
+/usr/bin/install -c -m 0755 date_core.so ./.gem.20250326-1370840-kn38hf
+
+current directory: /home/alex/rails/fader_api/vendor/bundle/ruby/3.2.0/gems/date-3.4.1/ext/date
+make DESTDIR\= sitearchdir\=./.gem.20250326-1370840-kn38hf sitelibdir\=./.gem.20250326-1370840-kn38hf clean

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fader Module</title>
+    <style>
+        body {
+            background: #f0f0f0;
+            font-family: sans-serif;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            border: 2px dashed #aaa;
+            width: 180px;
+            height: 760px;
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            cursor: grab;
+        }
+
+        .container:active {
+            cursor: grabbing;
+        }
+
+        .display {
+            position: absolute;
+            top: 40px;
+            left: 30px;
+            width: 120px;
+            height: 60px;
+            border-radius: 8px;
+            background: #ddeeff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .knob {
+            position: absolute;
+            top: 130px;
+            left: 61px;
+            width: 58px;
+            height: 58px;
+            background: #ccc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset -3px -3px 6px #fff, inset 3px 3px 6px #aaa;
+            transition: transform 0.2s ease;
+        }
+
+        .knob::after {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background: #333;
+            position: absolute;
+            top: 9px;
+            left: calc(50% - 2px);
+            border-radius: 2px;
+        }
+
+        .block {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 30px;
+            text-align: center;
+            background: none;
+        }
+
+        .fader {
+            position: absolute;
+            top: 345px;
+            left: 65px;
+            width: 50px;
+            height: 240px;
+            background: #eee;
+            border-radius: 4px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .fader-thumb {
+            width: 40px;
+            height: 20px;
+            background: #888;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            position: absolute;
+            left: 5px;
+        }
+
+        .button {
+            position: absolute;
+            width: 70px;
+            height: 60px;
+            background: linear-gradient(to bottom, #d0d8ff, #a0b0ff);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s;
+        }
+
+        .button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .button.b1-top {
+            top: 190px;
+            left: 55px;
+        }
+
+        .button.b2-top {
+            top: 260px;
+            left: 55px;
+        }
+
+        .button.b1-bottom {
+            bottom: 140px;
+            left: 55px;
+            margin-bottom: -50px;
+        }
+
+        .button.b2-bottom {
+            bottom: 60px;
+            left: 55px;
+            margin-bottom: -50px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="panel">
+        <div class="block">Block</div>
+        <div class="display" id="display">0</div>
+        <div class="knob" id="knob"></div>
+        <div class="fader" id="fader">
+            <div class="fader-thumb" id="thumb"></div>
+        </div>
+        <div class="button b1-top">Button 1</div>
+        <div class="button b2-top">Button 2</div>
+        <div class="button b1-bottom">Button 1</div>
+        <div class="button b2-bottom">Button 2</div>
+    </div>
+
+    <script>
+        const fader = document.getElementById("fader");
+        const thumb = document.getElementById("thumb");
+        const display = document.getElementById("display");
+        const knob = document.getElementById("knob");
+        const panel = document.getElementById("panel");
+
+        const min = -60;
+        const max = 10;
+        const faderHeight = 240;
+        const thumbHeight = 20;
+
+        let draggingThumb = false;
+        let draggingPanel = false;
+        let offsetX = 0, offsetY = 0;
+
+        // === THUMB ===
+        function updateFader(positionY) {
+            const rect = fader.getBoundingClientRect();
+            let offsetY = positionY - rect.top - thumbHeight / 2;
+            offsetY = Math.max(0, Math.min(offsetY, faderHeight - thumbHeight));
+            thumb.style.top = `${offsetY}px`;
+            const value = Math.round((1 - offsetY / (faderHeight - thumbHeight)) * (max - min) + min);
+            display.textContent = value;
+            const rotation = ((value - min) / (max - min)) * 270 - 135;
+            knob.style.transform = `rotate(${rotation}deg)`;
+        }
+
+        // MOUSE EVENTS FOR THUMB
+        thumb.addEventListener("mousedown", e => {
+            e.stopPropagation();
+            draggingThumb = true;
+        });
+
+        // TOUCH EVENTS FOR THUMB
+        thumb.addEventListener("touchstart", e => {
+            e.stopPropagation();
+            draggingThumb = true;
+        }, { passive: false });
+
+        // MOUSE + TOUCH MOVE
+        document.addEventListener("mousemove", e => {
+            if (draggingThumb) {
+                updateFader(e.clientY);
+            }
+        });
+
+        document.addEventListener("touchmove", e => {
+            if (draggingThumb) {
+                updateFader(e.touches[0].clientY);
+            } else if (draggingPanel) {
+                movePanel(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: false });
+
+        document.addEventListener("mouseup", () => {
+            draggingThumb = false;
+            draggingPanel = false;
+        });
+
+        document.addEventListener("touchend", () => {
+            draggingThumb = false;
+            draggingPanel = false;
+        });
+
+        // === PANEL DRAG ===
+        panel.addEventListener("mousedown", (e) => {
+            if (shouldIgnore(e.target)) return;
+            draggingPanel = true;
+            offsetX = e.offsetX;
+            offsetY = e.offsetY;
+        });
+
+        panel.addEventListener("touchstart", (e) => {
+            const touch = e.touches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (shouldIgnore(target)) return;
+            draggingPanel = true;
+            const rect = panel.getBoundingClientRect();
+            offsetX = touch.clientX - rect.left;
+            offsetY = touch.clientY - rect.top;
+        }, { passive: false });
+
+        document.addEventListener("mousemove", (e) => {
+            if (draggingPanel) movePanel(e.clientX, e.clientY);
+        });
+
+        function movePanel(x, y) {
+            panel.style.left = `${x - offsetX}px`;
+            panel.style.top = `${y - offsetY}px`;
+        }
+
+        function shouldIgnore(target) {
+            return target.closest('.fader-thumb') || target.closest('.button') || target.closest('.knob');
+        }
+    </script>
+
+</body>
+
+</html>
