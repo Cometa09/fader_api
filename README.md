@@ -58,10 +58,10 @@ The server returns the following JSON:
 ...
 ]
 
-Start:
-git clone
-bundle i
-bundle exec rake db:migrate
-bundle exec rake db:seed
-npm install
+Start:<br/>
+git clone<br/>
+bundle i<br/>
+bundle exec rake db:migrate<br/>
+bundle exec rake db:seed<br/>
+npm install<br/>
 rails server -b 0.0.0.0 -p 3000
