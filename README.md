@@ -1,4 +1,7 @@
 Fader API v1 first attempt.
+
+<img src="https://github.com/user-attachments/assets/db072a29-689a-4507-b170-fe7f5d1d52b2" width="600" />
+
 16 Buttons
 8 Faders
 
